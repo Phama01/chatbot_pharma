@@ -7,16 +7,24 @@ Contrairement au notebook (qui recalculait tout à chaque exécution dans Colab)
 ici l'index est construit une fois au démarrage du serveur et gardé en mémoire.
 """
 
-import io
 import glob
+import io
 import os
+import re
+from collections import Counter
 
-import numpy as np
 from pypdf import PdfReader
-from sentence_transformers import SentenceTransformer
 
 DOCUMENTS_DIR = os.path.join(os.path.dirname(__file__), "documents")
-MODELE_EMBEDDINGS = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+
+
+def normaliser_texte(texte: str) -> str:
+    return re.sub(r"\s+", " ", (texte or "")).strip()
+
+
+def tokeniser(texte: str) -> list[str]:
+    texte = normaliser_texte(texte.lower())
+    return re.findall(r"[a-z0-9à-ü]+", texte)
 
 
 def extraire_texte_pdf(chemin_pdf: str) -> str:
@@ -47,15 +55,13 @@ def decouper(texte: str, taille: int = 500, chevauchement: int = 80) -> list[str
 
 
 class MoteurRAG:
-    """Encapsule l'index documentaire et la recherche sémantique."""
+    """Encapsule l'index documentaire et la recherche sur les passages PDF."""
 
     def __init__(self):
-        self.encodeur = SentenceTransformer(MODELE_EMBEDDINGS)
         self.documents: list[dict] = []
-        self.vecteurs: np.ndarray | None = None
 
     def construire_index(self):
-        """Lit tous les PDF de `documents/`, les découpe et calcule les embeddings."""
+        """Lit tous les PDF de `documents/`, les découpe et prépare un index léger."""
         chemins = sorted(glob.glob(os.path.join(DOCUMENTS_DIR, "*.pdf")))
         if not chemins:
             raise RuntimeError(
@@ -63,7 +69,7 @@ class MoteurRAG:
                 "Ajoute tes guides pharmaciens dans ce dossier."
             )
 
-        LIMITE_CARACTERES = 300_000  # garde-fou : au-delà, un PDF est très probablement corrompu
+        LIMITE_CARACTERES = 300_000
 
         self.documents = []
         for chemin in chemins:
@@ -86,24 +92,67 @@ class MoteurRAG:
 
             print(f"   → {len(texte):,} caractères extraits", flush=True)
             for passage in decouper(texte):
-                self.documents.append({"titre": titre, "texte": passage})
+                if not passage.strip():
+                    continue
+                self.documents.append(
+                    {
+                        "titre": titre,
+                        "texte": passage,
+                        "tokens": tokeniser(passage),
+                        "titre_tokens": tokeniser(titre),
+                    }
+                )
 
-        textes_a_encoder = [f"{d['titre']} - {d['texte']}" for d in self.documents]
-        self.vecteurs = self.encodeur.encode(textes_a_encoder, normalize_embeddings=True)
         print(f"✅ Index construit : {len(self.documents)} passages issus de {len(chemins)} PDF.")
 
     def chercher(self, question: str, k: int = 3) -> list[dict]:
-        """Renvoie les k passages les plus proches de la question."""
-        if self.vecteurs is None:
+        """Renvoie les k passages les plus pertinents en utilisant un score lexical simple."""
+        if not self.documents:
             raise RuntimeError("L'index n'a pas été construit. Appelle construire_index() d'abord.")
-        v_question = self.encodeur.encode(question, normalize_embeddings=True)
-        similarites = self.vecteurs @ v_question
-        indices = np.argsort(-similarites)[:k]
-        return [
-            {
-                "titre": self.documents[i]["titre"],
-                "texte": self.documents[i]["texte"],
-                "score": float(similarites[i]),
-            }
-            for i in indices
-        ]
+
+        question_normalisee = normaliser_texte(question)
+        question_tokens = tokeniser(question_normalisee)
+
+        if not question_tokens:
+            return [
+                {
+                    "titre": doc["titre"],
+                    "texte": doc["texte"],
+                    "score": 0.0,
+                }
+                for doc in self.documents[:k]
+            ]
+
+        question_counter = Counter(question_tokens)
+        question_set = set(question_tokens)
+
+        scores: list[dict] = []
+        for doc in self.documents:
+            passage_tokens = doc["tokens"]
+            passage_counter = Counter(passage_tokens)
+            titre_counter = Counter(doc["titre_tokens"])
+
+            overlap_mots = sum(min(question_counter[token], passage_counter[token]) for token in question_counter)
+            overlap_titre = sum(min(question_counter[token], titre_counter[token]) for token in question_counter)
+            mots_communs = len(question_set & set(passage_tokens))
+            titre_communs = len(question_set & set(doc["titre_tokens"]))
+            phrase_presente = 1 if question_normalisee.lower() in doc["texte"].lower() else 0
+
+            score = (
+                overlap_mots * 3
+                + overlap_titre * 5
+                + mots_communs * 2
+                + titre_communs * 4
+                + phrase_presente * 3
+            )
+
+            scores.append(
+                {
+                    "titre": doc["titre"],
+                    "texte": doc["texte"],
+                    "score": float(score),
+                }
+            )
+
+        scores.sort(key=lambda item: (-item["score"], item["titre"], item["texte"]))
+        return scores[:k]
