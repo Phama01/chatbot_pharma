@@ -12,6 +12,7 @@ import re
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from groq import Groq
 from pydantic import BaseModel
 
@@ -152,6 +153,11 @@ def est_confirmation(question: str) -> bool:
     texte = " ".join(texte.split())
     confirmations = {"oui", "oui merci", "oui merci beaucoup", "d accord", "c est bon"}
     return texte in confirmations or texte.startswith("oui ")
+
+
+@app.get("/")
+def serve_frontend():
+    return FileResponse("test.html")
 
 
 @app.get("/health")
