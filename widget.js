@@ -4,8 +4,9 @@
  * juste avant </body> sur chaque page (landing + page annexe).
  */
 (function () {
-  // 👉 Remplace par l'URL de ton backend une fois déployé (Render, Fly.io, etc.)
-  const API_URL = "http://localhost:8000/chat";
+  // Utilise le même site déployé pour appeler le backend.
+  // Si tu intègres ce widget sur un autre site, remplace par l'URL Render exacte.
+  const API_URL = "/chat";
 
   const fonts = document.createElement("link");
   fonts.rel = "stylesheet";

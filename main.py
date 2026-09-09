@@ -160,6 +160,11 @@ def serve_frontend():
     return FileResponse("test.html")
 
 
+@app.get("/widget.js")
+def serve_widget_js():
+    return FileResponse("widget.js")
+
+
 @app.get("/health")
 def sante():
     return {"status": "ok", "passages_indexes": len(moteur.documents)}
