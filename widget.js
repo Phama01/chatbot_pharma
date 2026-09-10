@@ -4,9 +4,12 @@
  * juste avant </body> sur chaque page (landing + page annexe).
  */
 (function () {
-  // Utilise le même site déployé pour appeler le backend.
-  // Si tu intègres ce widget sur un autre site, remplace par l'URL Render exacte.
-  const API_URL = "/chat";
+  // En local, la page de test est souvent servie sur http://localhost:5500,
+  // tandis que le backend FastAPI tourne sur http://localhost:8000.
+  // On pointe donc vers le bon backend selon le port utilisé.
+  const API_URL = window.location.port === "5500"
+    ? "http://localhost:8000/chat"
+    : "/chat";
   const QUICK_PROMPTS = [
     "Comment ça marche ?",
     "Quel est le prix ?",
@@ -41,9 +44,20 @@
       display: flex; align-items: center; justify-content: center;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    #mp-launcher:hover { transform: scale(1.06); box-shadow: 0 8px 24px rgba(20, 51, 42, 0.45); }
+    #mp-launcher:hover { transform: scale(1.06) rotate(-2deg); box-shadow: 0 8px 24px rgba(20, 51, 42, 0.45); }
     #mp-launcher:focus-visible { outline: 2px solid var(--mp-amber-500); outline-offset: 3px; }
     #mp-launcher svg { width: 26px; height: 26px; }
+    .mp-launcher-robot {
+      position: absolute; right: 5px; bottom: 5px; width: 18px; height: 18px;
+      border-radius: 50%; background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.5); display: flex;
+      align-items: center; justify-content: center; font-size: 9px; line-height: 1;
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+    #mp-launcher:hover .mp-launcher-robot {
+      animation: mp-robot-bob 0.5s ease-in-out infinite alternate;
+      background: rgba(255,255,255,0.28);
+    }
 
     #mp-window {
       position: fixed; bottom: 92px; right: 22px; width: 480px; max-width: calc(100vw - 32px);
@@ -139,6 +153,10 @@
       0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
       30% { transform: translateY(-4px); opacity: 1; }
     }
+    @keyframes mp-robot-bob {
+      0% { transform: translateY(0) rotate(-8deg); }
+      100% { transform: translateY(-2px) rotate(8deg); }
+    }
 
     #mp-input-row {
       display: flex; align-items: center; gap: 8px; padding: 12px;
@@ -174,7 +192,12 @@
   const launcher = document.createElement("button");
   launcher.id = "mp-launcher";
   launcher.setAttribute("aria-label", "Ouvrir l'assistant missionspharma.pro");
-  launcher.innerHTML = `<span style="color:white">${CROSS_ICON}</span>`;
+  launcher.innerHTML = `
+    <span style="position:relative; display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:white;">
+      ${CROSS_ICON}
+      <span class="mp-launcher-robot">🤖</span>
+    </span>
+  `;
   document.body.appendChild(launcher);
 
   const win = document.createElement("div");
@@ -186,7 +209,6 @@
       <div id="mp-header-mark"><span style="color:white">${CROSS_ICON}</span></div>
       <div id="mp-header-text">
         <div id="mp-header-title">Assistant missionspharma.pro</div>
-        <div id="mp-header-subtitle">Répond à partir de vos guides</div>
       </div>
       <button id="mp-toggle-size" aria-label="Agrandir ou réduire le chatbot">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none"><path d="M8 4h12v12M16 4L4 16M20 20H8V8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
