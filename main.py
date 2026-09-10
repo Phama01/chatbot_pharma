@@ -36,8 +36,13 @@ Tu es l’assistant PharmaBilan Pro pour missionspharma.pro.
 Ton objectif : aider les pharmaciens à comprendre rapidement la plateforme, ses fonctionnalités, son essai gratuit, ses tarifs, et les usages pratiques de PharmaBilan Pro.
 
 Règles absolues :
-- Réponds en français, en texte simple, sans Markdown, sans tableaux, sans astérisques, sans listes longues.
+- Réponds en français, en texte simple, sans Markdown, sans tableaux, sans astérisques.
+- Les tirets sont autorisés uniquement pour les énumérations de 3 éléments ou plus.
 - Réponds en 2 à 5 phrases maximum, sauf si l’utilisateur demande une explication détaillée.
+- Pour les échanges courts (salutations, remerciements, confirmations), réponds naturellement en une phrase, sans forcer de structure.
+- Si ta réponse contient plusieurs idées distinctes en dehors d’une liste, sépare-les par un retour à la ligne plutôt que de les enchaîner dans un seul bloc.
+- Pour 2 éléments simples liés dans une phrase, une formulation fluide reste acceptable.
+- La limite de 5 phrases est un guide, pas une coupure stricte : si la question appelle une vraie explication, privilégie la clarté à la brièveté.
 - Ne parle jamais des documents, du contexte, du texte ou de la base de données.
 - Ne réponds que sur le périmètre de PharmaBilan Pro et des guides fournis.
 - Si une information n’est pas dans les guides, dis-le simplement et oriente vers contact.pharmaservices@gmail.com.
@@ -62,8 +67,6 @@ Contenu à connaître :
 - La plateforme est RGPD, sécurisée, et les données sensibles ne sont pas conservées.
 - Les paiements sont sécurisés par Stripe.
 - Attention : PharmaBilan Pro couvre les bilans de prévention santé et les bilans de grossesse. Elle ne propose pas d’entretiens réglementés AVK, AOD, asthme ou autres missions thématiques en dehors de ces bilans.
-
-Réponds toujours avec un ton simple, direct et professionnel.
 """
 
 app = FastAPI(title="Assistant IA missionspharma.pro")
@@ -155,6 +158,21 @@ def est_confirmation(question: str) -> bool:
     return texte in confirmations or texte.startswith("oui ")
 
 
+def est_question_hors_perimetre(question: str) -> bool:
+    texte = re.sub(r"[^a-z0-9à-ü\s+\-*/=]", " ", question.strip().lower())
+    texte = " ".join(texte.split())
+    if not texte:
+        return False
+
+    if re.search(r"\b\d+\s*[+\-*/]\s*\d+\b", texte):
+        return True
+
+    if re.search(r"\b\d+\s*=\s*\d+\b", texte):
+        return True
+
+    return False
+
+
 @app.get("/")
 def serve_frontend():
     return FileResponse("test.html")
@@ -193,6 +211,15 @@ def chat(payload: Question):
             )
         return {
             "reponse": reponse,
+            "sources": [],
+        }
+
+    if est_question_hors_perimetre(question):
+        return {
+            "reponse": (
+                "Je suis spécialisé sur PharmaBilan Pro et ses guides. "
+                "Pose-moi plutôt une question sur l’essai gratuit, les fonctionnalités, les tarifs, la sécurité, ou le fonctionnement de la plateforme."
+            ),
             "sources": [],
         }
 
