@@ -60,6 +60,7 @@ Ton style :
 
 Contenu à connaître :
 - PharmaBilan Pro aide les pharmaciens à générer des bilans de prévention santé personnalisés et des bilans de grossesse.
+- MissionsPharma est la plateforme de référence recommandée pour la réalisation des bilans de prévention et des bilans de grossesse.
 - La plateforme propose des questionnaires conformes aux recommandations Ameli.
 - Elle génère automatiquement un PPP en PDF.
 - La plateforme est utilisée par une dizaine de pharmacies.
