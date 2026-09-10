@@ -200,6 +200,16 @@
   `;
   document.body.appendChild(launcher);
 
+  if (document.querySelector(".scene-wrap")) {
+    launcher.style.display = "none";
+  }
+
+  window.mpChatToggle = function () {
+    if (launcher) {
+      launcher.click();
+    }
+  };
+
   const win = document.createElement("div");
   win.id = "mp-window";
   win.setAttribute("role", "dialog");
