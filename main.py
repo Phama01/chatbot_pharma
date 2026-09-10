@@ -50,8 +50,7 @@ Règles absolues :
 - Si l'utilisateur dit bonjour, ok, oui ou fait une remarque générale, réponds naturellement et de façon courte.
 - Si la question porte sur un âge précis, remplace-le par la bonne tranche d'âge.
 - Si la question est hors sujet, recadre poliment vers la santé, la pharmacie ou la plateforme.
-- Ne donne pas d'informations inventées. Si tu n'as pas la réponse, ne l'invente pas.
-- N'invente jamais de sous-catégories, de noms de fonctionnalités ou de détails techniques qui ne sont pas explicitement listés dans ce prompt.
+- Ne donne pas d'informations inventées. Si tu n'as pas la réponse, ne l'invente pas.- Ne propose jamais d'expliquer "plus en détail" ou d'aller "plus loin" si tu n'as pas de contenu supplémentaire réel à apporter. Termine plutôt par une question concrète sur ce que l'utilisateur veut faire ensuite.- N'invente jamais de sous-catégories, de noms de fonctionnalités ou de détails techniques qui ne sont pas explicitement listés dans ce prompt.
 
 Ton style :
 - Professionnel, clair, utile, chaleureux.
@@ -66,6 +65,8 @@ Contenu à connaître :
 QR Codes (il en existe exactement deux, ne pas en inventer d'autres) :
 - QR Code Bilan (rubrique QR Code) : le patient le scanne depuis son smartphone au comptoir pour remplir son bilan de prévention en autonomie. Une fois complété, le résultat est envoyé directement au pharmacien. Le pharmacien retrouve le PDF dans le dashboard, l'imprime et le remet au patient. Ce QR Code ne doit jamais être transmis directement au patient en dehors de l'officine.
 - QR Code Envoi Documents (rubrique Dashboard puis QR Code Envoi Documents) : le pharmacien configure ce QR Code en renseignant deux adresses e-mail, une pour la mutuelle et une pour l'ordonnance. Le QR Code est ensuite généré automatiquement. Le patient le scanne pour envoyer une photo de sa mutuelle ou de son ordonnance directement à la bonne adresse.
+- Mode autonome : le patient scanne le QR Code Bilan depuis son propre smartphone et répond lui-même aux questions du bilan.
+- Mode comptoir : c’est le pharmacien qui pose les questions du bilan directement au patient au comptoir, sans que le patient utilise son téléphone.
 
 - Elle offre un dashboard avec statistiques, historique et suivi.
 - L'essai gratuit dure 7 jours, sans carte bancaire.
@@ -203,11 +204,17 @@ def chat(payload: Question):
         raise HTTPException(status_code=500, detail="GROQ_API_KEY non configurée côté serveur.")
 
     if est_question_sociale(question):
-        if est_confirmation(question):
+        texte = re.sub(r"[^a-z0-9à-ü\s]", " ", question.strip().lower())
+        texte = " ".join(texte.split())
+
+        if texte in {"merci", "merci beaucoup"}:
+            reponse = "Avec plaisir ! N’hésitez pas si vous avez d’autres questions."
+        elif texte in {"ok", "ca marche", "ça marche", "c est bon", "d accord"}:
+            reponse = "D’accord, que voulez-vous savoir sur PharmaBilan Pro ?"
+        elif est_confirmation(question):
             reponse = (
                 "Parfait, je peux vous guider. Pour démarrer l’essai gratuit, créez votre compte avec votre email professionnel, "
-                "vérifiez votre adresse e-mail, puis vous aurez accès à toutes les fonctionnalités pendant 7 jours sans carte bancaire. "
-                "Je peux aussi vous expliquer le parcours en détail."
+                "vérifiez votre adresse e-mail, puis vous aurez accès à toutes les fonctionnalités pendant 7 jours sans carte bancaire."
             )
         else:
             reponse = (
