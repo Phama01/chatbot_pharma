@@ -1,1 +1,111 @@
-<!DOCTYPE html> <html> <head> <meta charset="UTF-8"> <title>Test widget</title> </head> <body> <h1>Page de test</h1> <script src="widget.js"></script> </body> </html> La ligne <meta charset="UTF-8">
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PharmaBilan Pro — Démo chatbot</title>
+    <style>
+      :root {
+        --forest-900: #14332A;
+        --forest-700: #1F4D3D;
+        --forest-600: #2B6A4F;
+        --mint-100: #E7F1E9;
+        --cream-50: #FBFAF6;
+        --ink-900: #17241D;
+        --ink-600: #4A594F;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(160deg, #edf5ef 0%, #f9faf5 100%);
+        color: var(--ink-900);
+      }
+
+      .demo-shell {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 56px 24px 80px;
+      }
+
+      .hero {
+        background: white;
+        border: 1px solid #dfe6df;
+        border-radius: 24px;
+        padding: 32px;
+        box-shadow: 0 10px 30px rgba(20, 51, 42, 0.08);
+      }
+
+      .badge {
+        display: inline-block;
+        background: var(--mint-100);
+        color: var(--forest-900);
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 8px 12px;
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3.5rem);
+        line-height: 1.1;
+      }
+
+      p {
+        font-size: 1.05rem;
+        line-height: 1.7;
+        max-width: 760px;
+        margin: 18px 0 0;
+        color: var(--ink-600);
+      }
+
+      .cta-row {
+        margin-top: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .cta {
+        display: inline-block;
+        text-decoration: none;
+        background: var(--forest-700);
+        color: white;
+        border-radius: 999px;
+        padding: 12px 18px;
+        font-weight: 700;
+      }
+
+      .cta.secondary {
+        background: white;
+        border: 1px solid var(--forest-700);
+        color: var(--forest-700);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-shell">
+      <div class="hero">
+        <div class="badge">Démo SaaS</div>
+        <h1>PharmaBilan Pro</h1>
+        <p>
+          Testez le chatbot de démonstration de PharmaBilan Pro directement ici.
+          Posez une question sur l’essai gratuit, les fonctionnalités, les tarifs,
+          ou le mode de fonctionnement de la plateforme.
+        </p>
+        <div class="cta-row">
+          <a class="cta" href="https://missionspharma.pro" target="_blank" rel="noreferrer">Voir le site</a>
+          <a class="cta secondary" href="https://chatbot-pharma.onrender.com/health" target="_blank" rel="noreferrer">Tester l’API</a>
+        </div>
+      </div>
+    </div>
+
+    <script src="/widget.js"></script>
+  </body>
+</html>

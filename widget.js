@@ -7,6 +7,12 @@
   // Utilise le même site déployé pour appeler le backend.
   // Si tu intègres ce widget sur un autre site, remplace par l'URL Render exacte.
   const API_URL = "/chat";
+  const QUICK_PROMPTS = [
+    "Comment ça marche ?",
+    "Quel est le prix ?",
+    "Quelles sont les fonctionnalités ?",
+    "C’est quoi l’essai gratuit ?"
+  ];
 
   const fonts = document.createElement("link");
   fonts.rel = "stylesheet";
@@ -28,7 +34,7 @@
     }
 
     #mp-launcher {
-      position: fixed; bottom: 22px; right: 22px; width: 58px; height: 58px;
+      position: fixed; bottom: 22px; right: 22px; width: 64px; height: 64px;
       border-radius: 50%; border: none; cursor: pointer; z-index: 9999;
       background: linear-gradient(155deg, var(--mp-forest-600), var(--mp-forest-900));
       box-shadow: 0 6px 20px rgba(20, 51, 42, 0.35);
@@ -40,8 +46,8 @@
     #mp-launcher svg { width: 26px; height: 26px; }
 
     #mp-window {
-      position: fixed; bottom: 92px; right: 22px; width: 440px; max-width: calc(100vw - 32px);
-      height: 620px; max-height: 82vh; background: var(--mp-cream-50);
+      position: fixed; bottom: 92px; right: 22px; width: 480px; max-width: calc(100vw - 32px);
+      height: 700px; max-height: 85vh; background: var(--mp-cream-50);
       border-radius: 18px; overflow: hidden; z-index: 9999;
       box-shadow: 0 20px 48px rgba(20, 51, 42, 0.22);
       display: none; flex-direction: column;
@@ -51,8 +57,8 @@
     }
 
     #mp-window.mp-window-expanded {
-      width: min(680px, calc(100vw - 32px));
-      height: min(780px, calc(100vh - 40px));
+      width: min(760px, calc(100vw - 32px));
+      height: min(860px, calc(100vh - 40px));
     }
 
     #mp-header {
@@ -86,6 +92,16 @@
     #mp-messages {
       flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px;
     }
+    #mp-suggestions {
+      display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 12px 0;
+      border-bottom: 1px solid var(--mp-line); background: white;
+    }
+    .mp-suggestion {
+      border: 1px solid var(--mp-line); background: var(--mp-mint-100);
+      color: var(--mp-forest-900); border-radius: 999px; padding: 7px 10px;
+      font-size: 12px; cursor: pointer; transition: background 0.15s ease;
+    }
+    .mp-suggestion:hover { background: #dfeee2; }
     .mp-row { display: flex; }
     .mp-row.mp-user { justify-content: flex-end; }
     .mp-row.mp-bot { justify-content: flex-start; }
@@ -180,6 +196,7 @@
       </button>
     </div>
     <div id="mp-messages"></div>
+    <div id="mp-suggestions"></div>
     <div id="mp-input-row">
       <input id="mp-input" type="text" placeholder="Pose ta question…" aria-label="Ta question" />
       <button id="mp-send" aria-label="Envoyer">
@@ -190,6 +207,7 @@
   document.body.appendChild(win);
 
   const messagesEl = win.querySelector("#mp-messages");
+  const suggestionsEl = win.querySelector("#mp-suggestions");
   const inputEl = win.querySelector("#mp-input");
   const sendBtn = win.querySelector("#mp-send");
   const closeBtn = win.querySelector("#mp-close");
@@ -211,6 +229,8 @@
     }
     if (ouvert) inputEl.focus();
   }
+
+  renderSuggestions();
 
   launcher.addEventListener("click", ouvrirFermer);
   closeBtn.addEventListener("click", ouvrirFermer);
@@ -239,6 +259,19 @@
     messagesEl.appendChild(row);
     messagesEl.scrollTop = messagesEl.scrollHeight;
     return bubble;
+  }
+
+  function renderSuggestions() {
+    suggestionsEl.innerHTML = QUICK_PROMPTS.map((prompt) => `
+      <button type="button" class="mp-suggestion" data-prompt="${prompt}">${prompt}</button>
+    `).join("");
+
+    suggestionsEl.querySelectorAll(".mp-suggestion").forEach((button) => {
+      button.addEventListener("click", () => {
+        inputEl.value = button.dataset.prompt;
+        envoyerQuestion();
+      });
+    });
   }
 
   function afficherFrappe() {
